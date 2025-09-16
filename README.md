@@ -18,8 +18,10 @@ With vue3-router-ex, you can enhance a route definition to:
 vue3-router-ex also ensures that component props (the ones you get with `defineProps`) include:
 
 1. The route parameters.
-2. All the (often fetched) data (see [resolves](#resolves)) set in the route definition.
+2. The query string parameters.
 3. Some variables that are not part of the route url (i.e. not in params or query). It uses windows.history.state to pass these variables.
+
+At last, alongside defineProps, it allows to get all the (often fetched) data (see [resolves](#resolves)) set in the route definition, thanks to a new defineResolves function.
 
 # Installation and general setup
 
@@ -133,7 +135,7 @@ If you come, like me, from the AngularJS/ui-router world, then you know what res
 
 > The resolve subsystem is an asynchronous, hierarchical Dependency Injection system.
 
-Said otherwise, resolves are data you want to load and that are a prerequisite to the route being targeted. If you want to load from the server a user profile object and the user does not exist in the database, then you can't go to the profile route. Instead, typically, you will be redirected to another route and an error message will be displayed.
+Said otherwise, resolves are data you want to load and that are a prerequisite to the route being targeted. If you want to load a user profile object from the server and the user does not exist in the database, then you can't go to the profile route. Instead, typically, you will be redirected to another route and an error message will be displayed.
 
 ## Resolve definitions
 
@@ -177,9 +179,19 @@ pageTitle: function (game) {
 
 Instead, we have to use a trick (an array of the argument names and the function itself as the last argument) that will make this injection mechanism survive the minification step when we build for production. Without it, the argument names would be changed and the injection mechanism would not know what they mean. This trick is taken from the AngularJS code itself. If there are no dependencies, you can use a simple function instead of an array.
 
+## Resolve access
+
+In your component, you can easily access your resolves with the defineResolves function (this is not a macro like defineProps):
+
+```javascript
+    const { game, pageTitle } = defineResolves(['game', 'pageTitle'])
+```
+
+Destructuration is mandatory if you want to use the resolves in your template, as each resolve is reactive. And since they are reactive, you can [watch](https://vuejs.org/guide/essentials/watchers) for them, which is very useful when transitioning from a route to the same route that has different parameter values.
+
 # Component props
 
-When a component is loaded for an activated route, you can normally use `defineProps` to get the parameters that are defined on the route. This is what Vue Router already offers.
+1. Route parameters: when a component is loaded for an activated route, you can normally use `defineProps` to get the parameters that are defined on the route. This is what Vue Router already offers.
 
 ```javascript
 // With this route definition:
@@ -192,14 +204,6 @@ const routes = [{
 // You can write in your component:
 const props = defineProps(['id'])
 ```
-
-This plugin adds more data to the props you can get.
-
-1. Resolves: each resolve you have defined in your route will be available here. In the example given in the previous section, you can write in your component:
-
-    ```javascript
-    const props = defineProps(['game', 'pageTitle'])
-    ```
 
 2. Custom parameters: with Vue Router, you can pass some values that are not part of a route url by adding a state property to your `push` call argument. If you need them to be part of component props, use a `props` property inside this state property:
 
@@ -217,7 +221,7 @@ This plugin adds more data to the props you can get.
     const props = defineProps(['location'])
     ```
     
-This implies that resolves, custom parameters and route parameters must have distinct names.
+This implies that route parameters and custom parameters must have distinct names.
 
 # Route states
 

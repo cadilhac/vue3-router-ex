@@ -1,7 +1,6 @@
-
-
-
+import { ref } from 'vue'
 import RouterViewEx from './RouterViewEx.vue'
+import { useRoute } from 'vue-router'
 
 // Utility functions
 //-------------------
@@ -370,16 +369,53 @@ const plugin = {
           // Get all the values for the needed props
           const propsWithValues = await getAllResolvesValues(deps)
 
-          // Build the final route props
+          // Build the final route props by including the route params
           to.meta.props = {
             ...to.meta.props,
-            ...propsWithValues,
-            ...to.params  // Add the route params
+            ...to.params,  // Add the route params
+			...to.query    // Add the query string params
           }
 
-          // The special $transition$ dep can be removed from props
-          delete to.meta.props.$transition$
-        }
+		// When transitioning to a new route
+		if (to.name != from.name) {
+			// Include in the meta a function that will allow retrieving the resolves by name
+			to.meta.routeResolvesFn = (propNames) => {
+				to.meta.routeResolves =  propNames.reduce((acc, propName) => {
+					if (propsWithValues.hasOwnProperty(propName)) {
+						acc[propName] = ref(propsWithValues[propName])
+					} else {
+						// If the resolve does not exist, return a ref(undefined)
+						acc[propName] = ref()
+					}
+					return acc
+				}, {})
+				return to.meta.routeResolves
+			}
+		}
+		// When transitioning to the same route (with different params)
+		else {
+			delete to.meta.routeResolvesFn
+			to.meta.routeResolves = from.meta.routeResolves
+
+			// Don't create new refs in meta.routeResolves
+			// Instead, update the existing ones
+			Object.keys(from.meta.routeResolves).forEach(x => {
+				const existingRef = from.meta.routeResolves[x]
+				if (existingRef)
+					existingRef.value = propsWithValues[x]
+			})
+		}
+		
+		// Also set the resolves on the meta object
+		to.meta.resolves = propsWithValues
+
+		// Also set the route params on the meta object
+		to.meta.params = to.params
+
+		// The special $transition$ dep can be removed from props
+		delete to.meta.props.$transition$
+		delete to.meta.resolves.$transition$
+}
         catch (err) {
           logError(err)
 
@@ -494,10 +530,16 @@ function useRoutesLoader(router, routeDefinitions) {
   })
 }
 
+function defineResolves(propNames) {
+	const route = useRoute()
+	return route.meta.routeResolves(propNames)
+}
+
 // Exports
 //---------
 
 export {
-  useRoutesLoader,
-  plugin
+	useRoutesLoader,
+	defineResolves,
+	plugin
 }
