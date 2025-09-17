@@ -532,7 +532,7 @@ function useRoutesLoader(router, routeDefinitions) {
 
 function defineResolves(propNames) {
 	const route = useRoute()
-	return route.meta.routeResolves(propNames)
+	return route.meta.routeResolvesFn(propNames)
 }
 
 // Exports
