@@ -21,7 +21,9 @@ vue3-router-ex also ensures that component props (the ones you get with `defineP
 2. The query string parameters.
 3. Some variables that are not part of the route url (i.e. not in params or query). It uses windows.history.state to pass these variables.
 
-At last, alongside defineProps, it allows to get all the (often fetched) data (see [resolves](#resolves)) set in the route definition, thanks to a new defineResolves function.
+A navigation directive (`v-route-to`) is also provided so that a click to any target element can trigger a route change.
+
+At last, alongside `defineProps`, it allows to get all the (often fetched) data (see [resolves](#resolves)) set in the route definition, thanks to a new defineResolves function.
 
 # Installation and general setup
 
@@ -193,19 +195,19 @@ Destructuration is mandatory if you want to use the resolves in your template, a
 
 1. Route parameters: when a component is loaded for an activated route, you can normally use `defineProps` to get the parameters that are defined on the route. This is what Vue Router already offers.
 
-```javascript
-// With this route definition:
-const routes = [{
-  name: 'user',
-  path: 'user/:id',
-  // [...]
-}]
+	```javascript
+	// With this route definition:
+	const routes = [{
+	name: 'user',
+	path: 'user/:id',
+	// [...]
+	}]
 
-// You can write in your component:
-const props = defineProps(['id'])
-```
+	// You can write in your component:
+	const props = defineProps(['id'])
+	```
 
-2. Custom parameters: with Vue Router, you can pass some values that are not part of a route url by adding a state property to your `push` call argument. If you need them to be part of component props, use a `props` property inside this state property:
+2. Custom parameters: with Vue Router, you can pass some values that are not part of a route url by adding a `state` property to your `push` call argument. If you need them to be part of component props, use a `props` property inside this `state` property:
 
     ```javascript
     router.push({
@@ -221,7 +223,24 @@ const props = defineProps(['id'])
     const props = defineProps(['location'])
     ```
     
-This implies that route parameters and custom parameters must have distinct names.
+    Note: this implies that route parameters and custom `state` parameters must have distinct names.
+
+	This works well when you're navigating to a new route. Unfortunately, this won't be the case if you try to navigate to the current route with only a change in `state`. In this case, the good old Vue-Router generates a 'duplicated route' error and it's impossible for the components of your route to be notified of the new state. This plugin provides the solution.
+
+	In your component:
+
+	```javascript
+	const routeState = defineModel('routeState', { required: false, type: Object })
+
+	onUpdated(() => {
+		// New state in routeState.value.myCustomState
+	})
+
+	// Or if you prefer to watch it:
+	watch(routeState, (state) => {
+		// New state in state.myCustomState
+	})
+    ```
 
 # Route states
 
@@ -412,4 +431,13 @@ meta: {
         }
     }
 }
+```
+
+# Directive
+
+Any element can trigger a route change thanks to the `v-route-to` directive.
+
+```javascript
+<Button label="Forgot password"	v-route-to="{ name: 'signin', state: { props: { forgotPwd: true }} }">
+</Button>
 ```
