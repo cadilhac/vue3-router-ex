@@ -9,7 +9,7 @@
   },
   "private": false,
   "name": "@cadilhac/vue3-router-ex",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A plugin for Vue 3 that extends Vue Router with a dash of resolves, states and reachable named views.",
   "license": "MIT",
   "keywords": [

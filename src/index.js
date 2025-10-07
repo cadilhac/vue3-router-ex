@@ -34,7 +34,9 @@ function objectHasSome(obj, predicate) {
 
 function getFunctionInformation(name, fn) {
 	// Code taken from Angularjs source code (annotate function)
-	const FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m
+	const FN_ARGS = /^(?:async\s+)?function\s*[^\(]*\(\s*([^\)]*)\)/m
+	const ARROW_ARG = /^(?:async\s+)?([^(]+?)=>/  // Single param without parens: x =>
+	const ARROW_ARGS = /^(?:async\s+)?\(([^)]*)\)\s*=>/  // Params with parens: (x, y) => or () =>
 	const FN_ARG_SPLIT = /,/
 	const FN_ARG = /^\s*(_?)(.+?)\1\s*$/
 	const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm
@@ -45,7 +47,7 @@ function getFunctionInformation(name, fn) {
 		actualFn = fn
 		args = []
 		fnText = fn.toString().replace(STRIP_COMMENTS, '')
-		argDecl = fnText.match(FN_ARGS)
+		argDecl = fnText.match(FN_ARGS) || fnText.match(ARROW_ARG) || fnText.match(ARROW_ARGS)
 		argDecl[1].split(FN_ARG_SPLIT).forEach((arg) => {
 			arg.replace(FN_ARG, function (all, underscore, name) {
 				args.push(name)
