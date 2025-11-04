@@ -1,14 +1,14 @@
 <template>
 	<router-view :name="name" v-slot="{ Component, route }">
-		<Transition :name="transition ?? ''">
+		<Transition v-if="transition" :name="transition">
 			<component :is="component ?? Component" v-bind="route.meta.props" v-model:routeState="state" />
 		</Transition>
+		<component v-else :is="component ?? Component" v-bind="route.meta.props" v-model:routeState="state" />
 	</router-view>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { shallowRef } from 'vue'
+import { ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const state = ref({})
