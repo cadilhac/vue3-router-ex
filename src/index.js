@@ -453,13 +453,13 @@ const plugin = {
 					}
 					// When transitioning to the same route (with different params)
 					else {
-						delete to.meta.routeResolvesFn
-						to.meta.routeResolves = from.meta.routeResolves
+						to.meta.routeResolves = from.meta.routeResolves ?? {}
+						to.meta.routeResolvesFn = from.meta.routeResolvesFn
 
 						// Don't create new refs in meta.routeResolves
 						// Instead, update the existing ones
-						Object.keys(from.meta.routeResolves).forEach((x) => {
-							const existingRef = from.meta.routeResolves[x]
+						Object.keys(to.meta.routeResolves).forEach((x) => {
+							const existingRef = to.meta.routeResolves[x]
 							if (existingRef) existingRef.value = propsWithValues[x]
 						})
 					}
